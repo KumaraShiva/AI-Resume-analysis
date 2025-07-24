@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Reviewer</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f5f6fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .container {
+      max-width: 900px;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 50px;
+    }
+    textarea {
+      font-size: 14px;
+      background: #f9f9f9;
+    }
+    .score-box {
+      background: #e0f7e9;
+      padding: 10px;
+      border-left: 5px solid #28a745;
+      margin-top: 20px;
+    }
+    .error-box {
+      background: #f8d7da;
+      padding: 10px;
+      border-left: 5px solid #dc3545;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Chat Toggle Button -->
+<button id="chat-toggle" style="
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  font-size: 26px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 9999;
+">💬</button>
+
+<!-- ChatBot Popup -->
+<div id="chat-box" style="
+  display: none;
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  width: 300px;
+  max-height: 400px;
+  padding: 15px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 9999;
+  font-size: 14px;
+">
+  <strong>🤖 Resume Bot</strong>
+  <hr>
+  <div id="chat-log" style="max-height: 220px; overflow-y: auto; font-size: 13px;"></div>
+  <input type="text" id="chat-input" class="form-control mt-2" placeholder="Ask about resumes...">
+  <button class="btn btn-sm btn-primary mt-2 w-100" onclick="sendToBot()">Send</button>
+</div>
+
+  <div class="container">
+    <h2 class="mb-4 text-center">🔍 AI Resume Reviewer & Score Generator</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Upload Resume (PDF Only)</label>
+        <input type="file" name="resume" class="form-control" accept=".pdf" required>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-success px-5">Analyze</button>
+      </div>
+    </form>
+
+    {% if text %}
+      <h5 class="mt-5">Extracted Resume Text</h5>
+      <textarea class="form-control" rows="12" readonly>{{ text }}</textarea>
+    {% endif %}
+
+    {% if score is not none %}
+      <div class="score-box mt-4">
+        <h5>Resume Score: {{ score }}/100</h5>
+      </div>
+    {% endif %}
+
+    {% if suggestions %}
+      {% if score is none %}
+        <div class="error-box mt-4">
+          <h5>⚠️ Invalid Resume</h5>
+          <ul>
+            {% for item in suggestions %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <div class="mt-4">
+          <h5>Suggestions for Improvement</h5>
+          <ul>
+            {% for item in suggestions %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- 🔽 Floating Suggestion Bot -->
+  <div id="bot-box" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    max-width: 300px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 999;
+  ">
+    <h6>🤖 Resume Bot Tips</h6>
+    {% if suggestions %}
+      <ul style="font-size: 14px; max-height: 250px; overflow-y: auto;">
+        {% for item in suggestions %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p style="font-size: 14px;">Upload a resume to receive suggestions here!</p>
+    {% endif %}
+  </div>
+  <script>
+  const chatToggle = document.getElementById("chat-toggle");
+  const chatBox = document.getElementById("chat-box");
+  const chatLog = document.getElementById("chat-log");
+  const chatInput = document.getElementById("chat-input");
+
+  chatToggle.addEventListener("click", () => {
+    chatBox.style.display = chatBox.style.display === "none" ? "block" : "none";
+  });
+
+  function sendToBot() {
+    const question = chatInput.value.trim();
+    if (!question) return;
+
+    chatLog.innerHTML += `<div><strong>You:</strong> ${question}</div>`;
+    chatInput.value = "";
+
+    fetch('/ask-bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    })
+    .then(response => response.json())
+    .then(data => {
+      chatLog.innerHTML += `<div><strong>Bot:</strong> ${data.response}</div>`;
+      chatLog.scrollTop = chatLog.scrollHeight;
+    })
+    .catch(error => {
+      chatLog.innerHTML += `<div><strong>Bot:</strong> Error talking to Ollama.</div>`;
+    });
+  }
+</script>
+
+</body>
+</html>
