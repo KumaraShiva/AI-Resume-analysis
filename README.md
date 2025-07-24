@@ -1,8 +1,8 @@
 # AI-Resume-analysis
 🧠 AI Resume Reviewer &amp; Score Generator (with Local Chatbot Support)
 This project is a smart, privacy-focused AI tool that:
+
 structure of this project
-------------------------------------------------------------------------
 resumeProject/
 ├── app.py                 # Flask server
 ├── resume_parser.py       # Resume scoring logic
@@ -10,7 +10,8 @@ resumeProject/
 │   └── index.html         # Main UI
 ├── static/
 │   └── style.css, bot.js  # Styles and frontend logic
----------------------------------------------------------------------------
+
+
 📄 Parses uploaded resumes (PDF/Docx)
 
 🧠 Scores them based on structure, skills, and keywords
